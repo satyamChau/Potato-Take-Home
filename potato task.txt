@@ -1,0 +1,90 @@
+Part 1: Ingest the Data
+1. Choose the File: You can start with the smaller ~50MB TSV file to ensure your system can handle it and then proceed to the ~500MB file if resources allow.
+   
+2. Ingesting the Data:
+   - Use Pandas in Python to read the TSV file, which is tab-separated. You can load it as follows:
+     `python
+     import pandas as pd
+
+     # Load the data
+     df = pd.read_csv('path_to_tsv_file.tsv', sep='\t', low_memory=False)
+     
+
+3. Structure the Data:
+   - If the dataset is large, consider indexing relevant fields like `user_id`, `tweet_text`, `created_at`, `place_id`, and `likes`. Pandas can handle medium-sized datasets but may not be as efficient for very large files.
+   - You could use **Elasticsearch** or another NoSQL database like **MongoDB** if the dataset is too large for Pandas to handle efficiently.
+
+### Part 2: Build Query Functionality
+Create functions to query the data based on the requirements:
+
+1. Tweets by Day:
+  
+   def tweets_by_day(df, term):
+       return df[df['tweet_text'].str.contains(term, case=False)].groupby(df['created_at'].dt.date).size()
+   
+
+2. Unique Users:
+     def unique_users(df, term):
+       return df[df['tweet_text'].str.contains(term, case=False)]['user_id'].nunique()
+   
+3. Average Likes:
+     def avg_likes(df, term):
+       return df[df['tweet_text'].str.contains(term, case=False)]['likes'].mean()
+  
+4. Location of Tweets:
+      def tweet_locations(df, term):
+       return df[df['tweet_text'].str.contains(term, case=False)]['place_id'].value_counts()
+   
+
+5. Times of Day:
+     def times_of_day(df, term):
+       return df[df['tweet_text'].str.contains(term, case=False)]['created_at'].dt.hour.value_counts()
+  
+
+6. Top User Posting the Term:
+      def top_user(df, term):
+       return df[df['tweet_text'].str.contains(term, case=False)]['user_id'].value_counts().idxmax()
+   
+ Part 3: Explain System Usage
+1. Instructions:
+   - Provide instructions on setting up the environment, such as installing required Python packages:
+     bash
+     pip install pandas streamlit elasticsearch
+     
+   - Detail how to run the script, explaining how each function can be called with appropriate examples.
+
+2. Design Choices:
+   - Why Pandas: Good for rapid prototyping and handling medium-sized datasets.
+   - Indexing: If using Elasticsearch or a NoSQL database, explain why (e.g., faster query times for large datasets).
+
+Part 4: Send the Link
+1. Create a GitHub repository.
+2. Add all your code, instructions in a `README.md` file, and Docker configurations if applicable.
+3. Share the link with the evaluator (or add the evaluator's GitHub username).
+
+Bells and Whistles
+1. Docker: Set up a `Dockerfile` to containerize the application. This will make it easy for anyone to run the system on their machine:
+   Dockerfile
+   FROM python:3.9-slim
+   WORKDIR /app
+   COPY . /app
+   RUN pip install -r requirements.txt
+   CMD ["python", "app.py"]
+   
+   
+2. API with Flask: You can create an API for querying using Flask. Example endpoint for tweets by day:
+ 
+   from flask import Flask, request, jsonify
+   app = Flask(__name__)
+
+   @app.route('/tweets_by_day', methods=['GET'])
+   def get_tweets_by_day():
+       term = request.args.get('term')
+       result = tweets_by_day(df, term)
+       return jsonify(result.to_dict())
+
+   if __name__ == '__main__':
+       app.run(debug=True)
+  
+
+
